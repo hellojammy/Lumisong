@@ -97,8 +97,6 @@ export function buildFormMeshes(opts: BuildFormOpts): FormMeshes {
 
   if (form === 'ripple') {
     const coreGeo = new THREE.TorusGeometry(1, gRip.tube, gRip.radial, gRip.tubular);
-    const shellGeo = new THREE.TorusGeometry(1, gRip.shellTube, gRip.radial, gRip.tubular);
-    shell = makeShellMesh(shellGeo, n);
     const core = new InstancedUniformsMesh(coreGeo, coreMaterial(), n);
     prepInstancedMesh(core);
     instMeshes.push(core);

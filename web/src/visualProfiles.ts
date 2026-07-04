@@ -13,7 +13,7 @@ export const GEO = {
     core: { r: 0.72, w: 28, h: 18 },
   },
   spire: { radial: 16, shellRadial: 16, shellRadius: 0.058, coreRadius: 0.05 },
-  ripple: { radial: 24, tubular: 64, tube: 0.07, shellTube: 0.082 },
+  ripple: { radial: 8, tubular: 48, tube: 0.07 },
   gem: { r: 0.8, shellR: 0.93, detail: 0 },
   planet: {
     core: { r: 0.85, w: 28, h: 18 },

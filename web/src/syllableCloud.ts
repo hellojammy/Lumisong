@@ -643,7 +643,7 @@ export class SyllableCloud {
   }
 
   /** 按形态写入实例矩阵（writeInstance / driveFinale 共用，谢幕与播放缩放一致） */
-  private applyInstanceTransforms(i: number, ps: number, env: number, finale = false): void {
+  private applyInstanceTransforms(i: number, ps: number, env: number): void {
     const flareS = 1 + SCALE_GAIN * env;
     this.dummy.position.copy(this.positions[i]);
     this.dummy.quaternion.copy(this.quats[i]);
@@ -662,19 +662,7 @@ export class SyllableCloud {
     const c = this.coreOf[i];
     c.mesh.setMatrixAt(c.idx, this.dummy.matrix);
     this.ring?.setMatrixAt(i, this.dummy.matrix);
-
-    if (!this.shell) return;
-    const hideRippleShell = !finale
-      && this.form === 'ripple'
-      && this.fillProgress(i) <= 0
-      && env === 0;
-    if (hideRippleShell) {
-      this.dummy.position.copy(this.positions[i]);
-      this.dummy.quaternion.copy(this.quats[i]);
-      this.dummy.scale.set(0.0001, 0.0001, 0.0001);
-      this.dummy.updateMatrix();
-    }
-    this.shell.setMatrixAt(i, this.dummy.matrix);
+    this.shell?.setMatrixAt(i, this.dummy.matrix);
   }
 
   /** 同一矩阵驱动该音节的全部网格层；014 未播缩小；015 按形态组合缩放；018 填充；020 渐隐 */
@@ -867,7 +855,7 @@ export class SyllableCloud {
       return;
     }
     for (let i = 0; i < n; i++) {
-      this.applyInstanceTransforms(i, scaleK, 0, true);
+      this.applyInstanceTransforms(i, scaleK, 0);
       const c = this.coreOf[i];
       this.tmpColor.copy(this.colors[i]).multiplyScalar(EMISSIVE_BASE * emisK);
       c.mesh.setUniformAt('emissive', c.idx, this.tmpColor);
