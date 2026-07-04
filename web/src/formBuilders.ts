@@ -108,9 +108,11 @@ export function buildFormMeshes(opts: BuildFormOpts): FormMeshes {
 
   if (form === 'gem') {
     const coreGeo = new THREE.OctahedronGeometry(gGem.r, gGem.detail);
-    shell = makeShellMesh(new THREE.SphereGeometry(gGem.shellR, 24, 16), n);
+    // 壳与核同形八面体，略大一圈（非球体包裹）
+    const shellGeo = new THREE.OctahedronGeometry(gGem.shellR, gGem.detail);
+    shell = makeShellMesh(shellGeo, n);
     const core = new InstancedUniformsMesh(
-      coreGeo, coreMaterial({ flatShading: true, rim: 0.35 }), n,
+      coreGeo, coreMaterial({ flatShading: true, rim: 0.38, gemFacet: true }), n,
     );
     prepInstancedMesh(core);
     instMeshes.push(core);

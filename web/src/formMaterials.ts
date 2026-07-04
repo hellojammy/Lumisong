@@ -16,6 +16,8 @@ export interface CoreMatOpts {
   rim?: number;
   /** C1：光针轴向顶端渐亮 */
   spireTip?: boolean;
+  /** 晶钻：棱角高光 + 内部亮芯 */
+  gemFacet?: boolean;
 }
 
 /** 外层着色玻璃壳（orb 及非 orb 轻量壳 C4） */
@@ -25,7 +27,7 @@ export function shellMaterial(): THREE.MeshPhysicalMaterial {
 
 /** 005 光体核 + 可选 rim / 光针顶端 shader 补丁 */
 export function coreMaterial(opts: CoreMatOpts = {}): THREE.MeshStandardMaterial {
-  const { flatShading = false, rim = 0, spireTip = false } = opts;
+  const { flatShading = false, rim = 0, spireTip = false, gemFacet = false } = opts;
   const mat = new THREE.MeshStandardMaterial({
     color: 0x000000,
     roughness: 1.0,
@@ -36,7 +38,7 @@ export function coreMaterial(opts: CoreMatOpts = {}): THREE.MeshStandardMaterial
     toneMapped: true,
     flatShading,
   });
-  if (rim > 0 || spireTip) {
+  if (rim > 0 || spireTip || gemFacet) {
     mat.onBeforeCompile = (shader) => {
       if (spireTip) {
         shader.vertexShader = shader.vertexShader.replace(
@@ -52,20 +54,30 @@ export function coreMaterial(opts: CoreMatOpts = {}): THREE.MeshStandardMaterial
           'void main() {',
           'varying float vSpireY;\nvoid main() {',
         );
-        shader.fragmentShader = shader.fragmentShader.replace(
-          '#include <emissivemap_fragment>',
-          `#include <emissivemap_fragment>
-          totalEmissiveRadiance *= 1.0 + smoothstep(0.35, 1.0, vSpireY) * 0.4;`,
-        );
       }
-      if (rim > 0) {
+      let emissiveExtra = '';
+      if (spireTip) {
+        emissiveExtra += 'totalEmissiveRadiance *= 1.0 + smoothstep(0.35, 1.0, vSpireY) * 0.4;\n';
+      }
+      if (rim > 0 || gemFacet) {
+        emissiveExtra += `{
+          float ndv = abs(dot(normalize(normal), normalize(vViewPosition)));
+        `;
+        if (rim > 0) {
+          emissiveExtra += `totalEmissiveRadiance += (1.0 - ndv) * ${rim.toFixed(3)};\n`;
+        }
+        if (gemFacet) {
+          emissiveExtra += `float edge = pow(1.0 - ndv, 2.6);
+          totalEmissiveRadiance *= 1.0 + edge * 0.32;
+          totalEmissiveRadiance += edge * 0.18;
+          `;
+        }
+        emissiveExtra += '}\n';
+      }
+      if (emissiveExtra) {
         shader.fragmentShader = shader.fragmentShader.replace(
           '#include <emissivemap_fragment>',
-          `#include <emissivemap_fragment>
-          {
-            float ndv = abs(dot(normalize(normal), normalize(vViewPosition)));
-            totalEmissiveRadiance += (1.0 - ndv) * ${rim.toFixed(3)};
-          }`,
+          `#include <emissivemap_fragment>\n${emissiveExtra}`,
         );
       }
     };

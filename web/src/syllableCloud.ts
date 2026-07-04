@@ -642,19 +642,15 @@ export class SyllableCloud {
     return 1 + BREATH_AMP * g * Math.sin(this.wallT * BREATH_FREQ + i * 1.7);
   }
 
-  /** 同一矩阵驱动该音节的全部网格层；014 未播缩小；015 按形态组合缩放；018 填充；020 渐隐 */
-  private writeInstance(i: number, env: number): void {
-    const g = this.fillProgress(i);
-    const ps = (SCALE_UNPLAYED + (1 - SCALE_UNPLAYED) * g) * this.fadeFactor(i);
+  /** 按形态写入实例矩阵（writeInstance / driveFinale 共用，谢幕与播放缩放一致） */
+  private applyInstanceTransforms(i: number, ps: number, env: number, finale = false): void {
     const flareS = 1 + SCALE_GAIN * env;
     this.dummy.position.copy(this.positions[i]);
     this.dummy.quaternion.copy(this.quats[i]);
     if (this.form === 'spire') {
-      // 光针：xz=粗细（响度×爆亮），y=长度（时长）
       const thick = this.baseRadius[i] * SPIRE_THICK * ps * flareS;
       this.dummy.scale.set(thick, this.stemLen[i] * ps, thick);
     } else if (this.form === 'ripple') {
-      // 涟漪：均匀缩放（半径=响度×爆亮，爆亮即扩张）
       const s = this.baseRadius[i] * RIPPLE_SCALE * ps * flareS;
       this.dummy.scale.set(s, s, s);
     } else {
@@ -663,10 +659,29 @@ export class SyllableCloud {
       this.dummy.scale.set(a.x * s, a.y * s, a.z * s);
     }
     this.dummy.updateMatrix();
-    this.shell?.setMatrixAt(i, this.dummy.matrix);
-    this.ring?.setMatrixAt(i, this.dummy.matrix);
     const c = this.coreOf[i];
     c.mesh.setMatrixAt(c.idx, this.dummy.matrix);
+    this.ring?.setMatrixAt(i, this.dummy.matrix);
+
+    if (!this.shell) return;
+    const hideRippleShell = !finale
+      && this.form === 'ripple'
+      && this.fillProgress(i) <= 0
+      && env === 0;
+    if (hideRippleShell) {
+      this.dummy.position.copy(this.positions[i]);
+      this.dummy.quaternion.copy(this.quats[i]);
+      this.dummy.scale.set(0.0001, 0.0001, 0.0001);
+      this.dummy.updateMatrix();
+    }
+    this.shell.setMatrixAt(i, this.dummy.matrix);
+  }
+
+  /** 同一矩阵驱动该音节的全部网格层；014 未播缩小；015 按形态组合缩放；018 填充；020 渐隐 */
+  private writeInstance(i: number, env: number): void {
+    const g = this.fillProgress(i);
+    const ps = (SCALE_UNPLAYED + (1 - SCALE_UNPLAYED) * g) * this.fadeFactor(i);
+    this.applyInstanceTransforms(i, ps, env);
   }
 
   /**
@@ -852,16 +867,8 @@ export class SyllableCloud {
       return;
     }
     for (let i = 0; i < n; i++) {
-      const a = this.aniso[i];
-      const s = this.baseRadius[i] * scaleK;
-      this.dummy.position.copy(this.positions[i]);
-      this.dummy.quaternion.copy(this.quats[i]);
-      this.dummy.scale.set(a.x * s, a.y * s, a.z * s);
-      this.dummy.updateMatrix();
-      this.shell?.setMatrixAt(i, this.dummy.matrix);
-      this.ring?.setMatrixAt(i, this.dummy.matrix);
+      this.applyInstanceTransforms(i, scaleK, 0, true);
       const c = this.coreOf[i];
-      c.mesh.setMatrixAt(c.idx, this.dummy.matrix);
       this.tmpColor.copy(this.colors[i]).multiplyScalar(EMISSIVE_BASE * emisK);
       c.mesh.setUniformAt('emissive', c.idx, this.tmpColor);
       if (this.ring) {
