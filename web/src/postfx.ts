@@ -54,7 +54,8 @@ class TrailPass extends Pass {
           vec4 n = texture2D(tNew, vUv);
           vec4 o = texture2D(tOld, vUv) * damp;
           float lum = max(n.r, max(n.g, n.b));
-          vec4 bright = n * step(lumThreshold, lum); // 只让真实爆亮进入拖尾历史
+          float brightMask = smoothstep(lumThreshold - 0.35, lumThreshold + 0.15, lum);
+          vec4 bright = n * brightMask;
           vec4 hist = max(bright, o);                // 历史缓冲：纯流光轨迹
           vec4 composite = max(n, o);                // 输出：场景 + 流光
           gl_FragColor = mix(composite, hist, writeHistory);

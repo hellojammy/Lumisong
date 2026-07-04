@@ -735,7 +735,8 @@ async function boot(): Promise<void> {
       if (cloud && rig && recState === 'recording') {
         // 录音中：无 playback 时钟，球随 append 渐入出现；用最新落点+录制时长驱动智能运镜跟随生长
         cloud.updateEffects(wall);
-        messenger.update(cloud.recMessengerFocus(), dt); // 022⑤：哨箭飞向新生球
+        const recPos = cloud.recMessengerFocus();
+        messenger.update(recPos, dt, recPos ? cloud.recFocusColor : null);
         combo?.update(dt, camera);
         const recFocus = cloud.hasRecFocus ? cloud.recFocus : null;
         rig.update(dt, recFocus, streamer?.elapsedSec ?? 0);
@@ -755,7 +756,8 @@ async function boot(): Promise<void> {
           finaleCruisePending = false;
           rig.setCruiseOverride(shouldUseFinaleCruise(currentCameraMode));
         }
-        messenger.update(playback.playing && cloud.hasFocus ? cloud.focus : null, dt);
+        const mFocus = playback.playing && cloud.hasFocus ? cloud.focus : null;
+        messenger.update(mFocus, dt, mFocus ? cloud.focusColor : null);
         combo?.update(dt, camera); // 016 连击浮字动画
         rhythmFloor?.update(t, dt, playback.playing);
         rig.update(dt, playback.playing && cloud.hasFocus ? cloud.focus : null, t);
