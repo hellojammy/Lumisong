@@ -1,0 +1,77 @@
+# ── 用户指定：不纳入版本库 ──
+/reference/
+/分析/
+/docs/
+/openspec/
+/graphify-out/
+
+# 根目录开发文档与散落文件
+/DEVELOPMENT.md
+/鸟鸣声音3D可视化-开发文档.md
+
+# 所有音频（任意目录）；示例 json 见下方例外
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.aac
+*.ogg
+*.opus
+*.mp4
+
+# 演示数据 json 保留（覆盖上方音频规则不适用；json 单独白名单）
+!web/public/data/
+!web/public/data/*.json
+
+# 日志
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── 依赖与构建产物 ──
+node_modules/
+web/dist/
+web/dist-ssr/
+ios/build/
+ios/Lumisong/WebContent/
+macos/build/
+macos/.build/
+macos/LumisongMac/WebContent/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ── 密钥与证书 ──
+.env
+.env.*
+web/certs/
+*.pem
+*.p12
+*.mobileprovision
+
+# ── 系统与编辑器 ──
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.xcuserstate
+**/xcuserdata/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── 本地 Agent / IDE 缓存 ──
+.claude/
+.superpowers/
+
+# ── Vite / 本地覆盖 ──
+*.local

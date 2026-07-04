@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lumisong · 鸣光</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=DM+Sans:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <canvas id="gl"></canvas>
+    <div id="washes"></div>
+    <div id="hud">
+      <div id="titleBar">
+        <span class="dot"></span>
+        <span class="brand">LUMISONG</span>
+        <span id="title">Music &middot; Voice &middot; Birdsong &middot; Ambient Sound</span>
+      </div>
+      <div id="stats"></div>
+      <button id="infoBtn">&#9432; 说明</button>
+      <div id="infoPanel" hidden>
+        <h3>这张三维声音图谱是什么？</h3>
+        <p>这是把一段<b>任意音频</b>（音乐、语音、鸟鸣或环境声）变成的<b>三维声音图谱</b>——<b>每颗球 = 一个可视化的声音事件</b>。</p>
+        <ul>
+          <li><b>位置</b>：横向 = 时间顺序，纵向 = 频率高低（音色亮度），纵深 = 音调纯净度——<b>挨得近的球，时间或音色就相近</b>；聚成一簇 = 重复相似的乐句、节奏或音色动机</li>
+          <li><b>颜色</b>：频谱带宽（音色的「宽窄」，对照左侧色条）</li>
+          <li><b>大小</b>：响度——声音越强球越大</li>
+          <li><b>形状</b>：光滑球 = 纯音（似口哨），多面晶体 = 沙哑宽频音</li>
+          <li><b>连线</b>：按先后顺序串起每个声音事件的轨迹——<b>已播放的是实线，还没播放到的是虚线</b></li>
+        </ul>
+        <p><b>播放时跳来跳去的亮光</b>：哪颗球爆亮，就是此刻正在响的那个声音事件；白色光点拖着尾迹在球间穿梭，是「声音」沿着时间顺序飞行的轨迹。</p>
+        <p class="note">核心视觉语言最初受 Lucio Arese 的《Seeing Birdsong》启发；本项目已定位为面向音乐、语音、鸟鸣与环境声的独立三维声音图谱。</p>
+      </div>
+      <div id="legend"></div>
+      <button id="playBtn" aria-label="play" disabled>&#9654;</button>
+      <button id="uploadBtn" disabled>&#8682; 上传音频</button>
+      <button id="recordBtn" aria-label="record" disabled></button>
+      <button id="refreshBtn" aria-label="refresh" title="刷新">&#10227; 刷新</button>
+      <button id="paletteBtn" disabled>&#9703; 配色</button>
+      <button id="formBtn" disabled>&#9671; 形态</button>
+      <button id="cameraBtn" aria-expanded="false" disabled>&#9711; 运镜</button>
+      <div id="cameraMenu" hidden></div>
+      <button id="settingsBtn" disabled>&#9881; 设置</button>
+      <div id="settingsPanel" hidden>
+        <button id="mistRow" class="row">云雾<span class="state">开</span></button>
+        <button id="comboRow" class="row">连击特效<span class="state">开</span></button>
+        <button id="fadeRow" class="row">渐隐谢幕<span class="state">关</span></button>
+        <button id="breathRow" class="row">余韵呼吸<span class="state">关</span></button>
+        <button id="floorRow" class="row">地形频谱<span class="state">关</span></button>
+      </div>
+      <input type="file" id="fileInput" accept="audio/*" hidden />
+      <div id="attribution">
+        Visual language inspired by Lucio Arese&rsquo;s &ldquo;Seeing Birdsong&rdquo; (lucioarese.net).
+        Independent web reimplementation.
+      </div>
+    </div>
+    <div id="overlay">
+      <div id="overlayMsg">Loading&hellip;</div>
+      <button id="retryBtn" hidden>Retry</button>
+    </div>
+    <div id="profileDialog" hidden>
+      <div class="profile-card">
+        <div class="profile-kicker">AUDIO PROFILE</div>
+        <h2>选择分析类型</h2>
+        <p id="profileGuessText"></p>
+        <div id="profileOptions" class="profile-options"></div>
+        <div class="profile-actions">
+          <button id="profileCancelBtn" type="button">取消</button>
+          <button id="profileConfirmBtn" type="button">开始分析</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      // 全局错误捕获（调试/诊断用，零开销）
+      window.addEventListener('error', (e) => {
+        window.__lastErr = `${e.message} @ ${e.filename}:${e.lineno}:${e.colno}`;
+      });
+      window.addEventListener('unhandledrejection', (e) => {
+        window.__lastErr = `unhandled: ${e.reason}`;
+      });
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
