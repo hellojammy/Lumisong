@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { norm, type SyllableData, type SyllablesJson } from './data';
+import { directorSmoothHints } from './cameraDirectorRig.ts';
 import { layoutPosition } from './layout';
 
 type DirectorStyle = 'overview' | 'timeline' | 'overhead' | 'push';
@@ -27,6 +28,9 @@ interface PlayheadPoint {
 export interface DirectorPose {
   position: THREE.Vector3;
   target: THREE.Vector3;
+  /** 指数平滑速率 hint，缺省用 Rig 默认档 */
+  smoothPos?: number;
+  smoothTarget?: number;
 }
 
 const MIN_HOLD = 2.4;
@@ -152,6 +156,8 @@ export class CameraDirector {
     if (this.phrases.length === 0) {
       out.position.set(center.x, center.y + vertR * 0.35, center.z + baseR * 1.12);
       out.target.copy(center);
+      delete out.smoothPos;
+      delete out.smoothTarget;
       return out;
     }
 
@@ -218,6 +224,9 @@ export class CameraDirector {
       Math.max(center.y + vertR * height, out.target.y + vertR * 0.24),
       anchor.z + radius * Math.sin(finalAngle),
     );
+    const hints = directorSmoothHints(phrase.style, !!playFocus);
+    out.smoothPos = hints.smoothPos;
+    out.smoothTarget = hints.smoothTarget;
     return out;
   }
 
