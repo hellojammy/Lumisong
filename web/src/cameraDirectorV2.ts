@@ -106,6 +106,8 @@ export class CameraDirectorV2 {
       Math.max(center.y + vertR * shot.height, out.target.y + vertR * 0.2),
       out.target.z + radius * Math.sin(cameraAngle),
     );
+    delete out.smoothPos;
+    delete out.smoothTarget;
     return out;
   }
 

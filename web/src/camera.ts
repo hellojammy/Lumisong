@@ -5,6 +5,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { CameraDirector, DirectorPose } from './cameraDirector';
 import type { CameraDirectorV2 } from './cameraDirectorV2';
 import type { ShipCruise } from './shipCruise';
+import {
+  DEFAULT_DIRECTOR_SMOOTH_POS,
+  DEFAULT_DIRECTOR_SMOOTH_TARGET,
+  lerpDirectorFocus,
+} from './cameraDirectorRig.ts';
 
 const ORBIT_PERIOD = 45;
 const OMEGA = (2 * Math.PI) / ORBIT_PERIOD;
@@ -74,6 +79,8 @@ export class CameraRig {
   private vertR: number;
   private directorReady = false;
   private cruiseOverride = false;
+  private readonly directorFocusSmooth = new THREE.Vector3();
+  private hasDirectorFocusSmooth = false;
   private readonly directorPos = new THREE.Vector3();
   private readonly directorTarget = new THREE.Vector3();
   private readonly directorPose: DirectorPose = {
@@ -130,6 +137,7 @@ export class CameraRig {
   refreshDirectors(director: CameraDirector | null, director2: CameraDirectorV2 | null): void {
     this.director = director;
     this.director2 = director2;
+    this.resetDirectorState();
   }
 
   /** 022 录音生长：中心随 cloud.center 引用自动更新，这里同步取景半径 */
@@ -137,10 +145,12 @@ export class CameraRig {
     this.center.copy(center);
     this.horizR = extent.horizRadius;
     this.vertR = extent.vertRadius;
+    this.resetDirectorState();
   }
 
   setMode(mode: CameraMode): void {
     this.mode = mode;
+    if (mode === 'director' || mode === 'director2') this.resetDirectorState();
     this.syncShipVisibility();
     if (mode === 'free' || mode === 'pilot') this.cruiseOverride = false;
     if (mode === 'pilot') this.shipCruise?.resetPilot();
@@ -153,6 +163,11 @@ export class CameraRig {
 
   private syncShipVisibility(): void {
     if (this.shipCruise) this.shipCruise.group.visible = showsShipModel(this.mode);
+  }
+
+  private resetDirectorState(): void {
+    this.directorReady = false;
+    this.hasDirectorFocusSmooth = false;
   }
 
   setCruiseOverride(enabled: boolean): void {
@@ -242,16 +257,30 @@ export class CameraRig {
     focus: THREE.Vector3 | null,
     dt: number,
   ): void {
-    director.poseAt(playTime, R, this.center, this.vertR, focus, this.directorPose);
+    const smoothed = this.smoothDirectorFocus(focus, dt);
+    director.poseAt(playTime, R, this.center, this.vertR, smoothed, this.directorPose);
     if (!this.directorReady) {
       this.directorPos.copy(this.directorPose.position);
       this.directorTarget.copy(this.directorPose.target);
       this.directorReady = true;
     } else {
-      this.directorPos.lerp(this.directorPose.position, 1 - Math.exp(-dt * 0.36));
-      this.directorTarget.lerp(this.directorPose.target, 1 - Math.exp(-dt * 0.52));
+      const posK = this.directorPose.smoothPos ?? DEFAULT_DIRECTOR_SMOOTH_POS;
+      const tgtK = this.directorPose.smoothTarget ?? DEFAULT_DIRECTOR_SMOOTH_TARGET;
+      this.directorPos.lerp(this.directorPose.position, 1 - Math.exp(-dt * posK));
+      this.directorTarget.lerp(this.directorPose.target, 1 - Math.exp(-dt * tgtK));
     }
     this.camera.position.copy(this.directorPos);
     this.camera.lookAt(this.directorTarget);
+  }
+
+  private smoothDirectorFocus(focus: THREE.Vector3 | null, dt: number): THREE.Vector3 | null {
+    const step = lerpDirectorFocus(
+      this.directorFocusSmooth,
+      this.hasDirectorFocusSmooth,
+      focus,
+      dt,
+    );
+    this.hasDirectorFocusSmooth = step.hasValue;
+    return step.value;
   }
 }
