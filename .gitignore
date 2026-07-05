@@ -1,7 +1,6 @@
 # ── 用户指定：不纳入版本库 ──
 /reference/
 /分析/
-/docs/
 /openspec/
 /graphify-out/
 
@@ -18,6 +17,12 @@
 *.ogg
 *.opus
 *.mp4
+!docs/assets/
+!docs/assets/*.mp4
+
+# 发布产物（README 下载链接）
+!release/
+!release/*.dmg
 
 # 演示数据 json 保留（覆盖上方音频规则不适用；json 单独白名单）
 !web/public/data/
