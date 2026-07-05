@@ -22,6 +22,7 @@ rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 cp "$BIN_PATH/LumisongMac" "$MACOS_DIR/LumisongMac"
 cp "$SCRIPT_DIR/Resources/Info.plist" "$CONTENTS_DIR/Info.plist"
+cp "$SCRIPT_DIR/Resources/LumisongIcon.icns" "$RESOURCES_DIR/LumisongIcon.icns"
 cp -R "$SCRIPT_DIR/LumisongMac/WebContent" "$RESOURCES_DIR/WebContent"
 
 chmod +x "$MACOS_DIR/LumisongMac"

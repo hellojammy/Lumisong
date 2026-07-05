@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="800" viewBox="0 0 1600 800" role="img" aria-labelledby="title desc">
+  <title id="title">Lumisong GitHub README hero</title>
+  <desc id="desc">A dark 3D audio atlas brand banner with the Lumisong logo, Chinese name, playback path, and dense perspective grid.</desc>
+  <defs>
+    <radialGradient id="bg" cx="28%" cy="16%" r="86%">
+      <stop offset="0" stop-color="#10233a"/>
+      <stop offset="0.52" stop-color="#07101d"/>
+      <stop offset="1" stop-color="#05070d"/>
+    </radialGradient>
+    <radialGradient id="centerGlow" cx="52%" cy="53%" r="42%">
+      <stop offset="0" stop-color="#67e8f9" stop-opacity="0.22"/>
+      <stop offset="0.42" stop-color="#38bdf8" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#05070d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="trail" x1="500" y1="500" x2="1110" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="0.56" stop-color="#67e8f9"/>
+      <stop offset="1" stop-color="#e0f2fe"/>
+    </linearGradient>
+    <linearGradient id="gridLine" x1="240" y1="640" x2="1360" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1e3a8a" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#38bdf8" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#1e3a8a" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="nodeGlow" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="15" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.16 0 0 0 0 0.62 0 0 0 0 1 0 0 0 0.72 0"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="trailGlow" x="-30%" y="-90%" width="160%" height="280%">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.28 0 0 0 0 0.74 0 0 0 0 1 0 0 0 0.64 0"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="textGlow" x="-20%" y="-40%" width="140%" height="180%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.08 0 0 0 0 0.22 0 0 0 0 0.35 0 0 0 0.8 0"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1600" height="800" rx="56" fill="url(#bg)"/>
+  <rect width="1600" height="800" rx="56" fill="url(#centerGlow)"/>
+  <circle cx="225" cy="92" r="290" fill="#3b82f6" opacity="0.08"/>
+  <circle cx="1378" cy="565" r="260" fill="#f97316" opacity="0.055"/>
+
+  <g opacity="0.88">
+    <path d="M220 698H1380" stroke="url(#gridLine)" stroke-width="1.2"/>
+    <path d="M274 658H1326" stroke="url(#gridLine)" stroke-width="1.2"/>
+    <path d="M325 622H1275" stroke="url(#gridLine)" stroke-width="1.2"/>
+    <path d="M374 590H1226" stroke="url(#gridLine)" stroke-width="1.2"/>
+    <path d="M420 562H1180" stroke="url(#gridLine)" stroke-width="1.1"/>
+    <path d="M464 538H1136" stroke="url(#gridLine)" stroke-width="1"/>
+    <path d="M505 516H1095" stroke="url(#gridLine)" stroke-width="1"/>
+    <path d="M250 716L582 500" stroke="#38bdf8" stroke-opacity="0.15" stroke-width="1.1"/>
+    <path d="M386 736L642 486" stroke="#38bdf8" stroke-opacity="0.13" stroke-width="1.1"/>
+    <path d="M526 748L700 478" stroke="#38bdf8" stroke-opacity="0.12" stroke-width="1.1"/>
+    <path d="M668 756L756 474" stroke="#38bdf8" stroke-opacity="0.11" stroke-width="1"/>
+    <path d="M810 758L810 472" stroke="#38bdf8" stroke-opacity="0.11" stroke-width="1"/>
+    <path d="M952 756L866 474" stroke="#38bdf8" stroke-opacity="0.11" stroke-width="1"/>
+    <path d="M1094 748L920 478" stroke="#38bdf8" stroke-opacity="0.12" stroke-width="1.1"/>
+    <path d="M1234 736L978 486" stroke="#38bdf8" stroke-opacity="0.13" stroke-width="1.1"/>
+    <path d="M1370 716L1038 500" stroke="#38bdf8" stroke-opacity="0.15" stroke-width="1.1"/>
+  </g>
+
+  <g fill="#7dd3fc" opacity="0.28">
+    <circle cx="462" cy="404" r="5.2"/><circle cx="520" cy="338" r="4.1"/><circle cx="575" cy="455" r="3.8"/>
+    <circle cx="615" cy="372" r="4.7"/><circle cx="690" cy="392" r="3.9"/><circle cx="800" cy="360" r="3.7"/>
+    <circle cx="790" cy="438" r="4.9"/><circle cx="858" cy="346" r="3.8"/><circle cx="906" cy="474" r="4.2"/>
+    <circle cx="1012" cy="406" r="3.8"/><circle cx="1104" cy="506" r="4.6"/><circle cx="1146" cy="364" r="3.5"/>
+    <circle cx="398" cy="520" r="3.5"/><circle cx="552" cy="572" r="4.1"/><circle cx="690" cy="532" r="3.6"/>
+    <circle cx="970" cy="566" r="3.8"/><circle cx="1196" cy="584" r="4.2"/><circle cx="1272" cy="492" r="3.5"/>
+  </g>
+
+  <path d="M450 500C535 448 590 400 670 418C748 438 760 333 850 320C940 306 965 405 1100 360" fill="none" stroke="url(#trail)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" filter="url(#trailGlow)"/>
+  <path d="M450 500C535 448 590 400 670 418C748 438 760 333 850 320C940 306 965 405 1100 360" fill="none" stroke="#e0f2fe" stroke-opacity="0.52" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <g filter="url(#nodeGlow)">
+    <circle cx="450" cy="500" r="28" fill="#67e8f9"/>
+    <circle cx="670" cy="418" r="38" fill="#38bdf8"/>
+    <circle cx="850" cy="320" r="27" fill="#a5f3fc"/>
+    <circle cx="960" cy="392" r="23" fill="#60a5fa"/>
+    <circle cx="1100" cy="360" r="33" fill="#7dd3fc"/>
+  </g>
+  <circle cx="670" cy="418" r="13" fill="#f97316" filter="url(#nodeGlow)"/>
+
+  <g filter="url(#textGlow)">
+    <text x="120" y="165" fill="#f3f7fb" font-family="'Space Grotesk', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif" font-size="92" font-weight="700" letter-spacing="3">Lumisong</text>
+    <text x="126" y="220" fill="#8ba0bb" font-family="'Space Grotesk', 'PingFang SC', 'Hiragino Sans GB', sans-serif" font-size="32" font-weight="500" letter-spacing="9">鸣光</text>
+    <text x="122" y="272" fill="#9db2ca" font-family="'DM Sans', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif" font-size="29" font-weight="500">3D audio atlas for music, voice, birdsong, and ambient sound</text>
+  </g>
+</svg>

@@ -10,6 +10,6 @@ test('page exposes a HUD refresh button for native shells', () => {
   assert.match(htmlSource, /<button id="refreshBtn"[^>]*aria-label="refresh"[^>]*>/);
   assert.match(mainSource, /const refreshBtn = \$<HTMLButtonElement>\('refreshBtn'\)/);
   assert.match(mainSource, /refreshBtn\.addEventListener\('click', \(\) => window\.location\.reload\(\)\)/);
-  assert.match(styleSource, /#refreshBtn\s*\{/);
-  assert.match(styleSource, /#refreshBtn:hover:not\(:disabled\)/);
+  assert.match(styleSource, /\.dock-btn\s*\{/);
+  assert.match(styleSource, /\.dock-btn:hover:not\(:disabled\)/);
 });

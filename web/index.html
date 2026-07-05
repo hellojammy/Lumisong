@@ -1,9 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#05070d" />
     <title>Lumisong · 鸣光</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,53 +21,107 @@
     <canvas id="gl"></canvas>
     <div id="washes"></div>
     <div id="hud">
-      <div id="titleBar">
-        <span class="dot"></span>
-        <span class="brand">LUMISONG</span>
-        <span id="title">Music &middot; Voice &middot; Birdsong &middot; Ambient Sound</span>
-      </div>
-      <div id="stats"></div>
-      <button id="infoBtn">&#9432; 说明</button>
-      <div id="infoPanel" hidden>
-        <h3>这张三维声音图谱是什么？</h3>
-        <p>这是把一段<b>任意音频</b>（音乐、语音、鸟鸣或环境声）变成的<b>三维声音图谱</b>——<b>每颗球 = 一个可视化的声音事件</b>。</p>
-        <ul>
-          <li><b>位置</b>：横向 = 时间顺序，纵向 = 频率高低（音色亮度），纵深 = 音调纯净度——<b>挨得近的球，时间或音色就相近</b>；聚成一簇 = 重复相似的乐句、节奏或音色动机</li>
-          <li><b>颜色</b>：频谱带宽（音色的「宽窄」，对照左侧色条）</li>
-          <li><b>大小</b>：响度——声音越强球越大</li>
-          <li><b>形状</b>：光滑球 = 纯音（似口哨），多面晶体 = 沙哑宽频音</li>
-          <li><b>连线</b>：按先后顺序串起每个声音事件的轨迹——<b>已播放的是实线，还没播放到的是虚线</b></li>
-        </ul>
-        <p><b>播放时跳来跳去的亮光</b>：哪颗球爆亮，就是此刻正在响的那个声音事件；白色光点拖着尾迹在球间穿梭，是「声音」沿着时间顺序飞行的轨迹。</p>
-        <p class="note">核心视觉语言最初受 Lucio Arese 的《Seeing Birdsong》启发；本项目已定位为面向音乐、语音、鸟鸣与环境声的独立三维声音图谱。</p>
-      </div>
-      <div id="legend"></div>
-      <button id="playBtn" aria-label="play" disabled>&#9654;</button>
-      <button id="uploadBtn" disabled>&#8682; 上传音频</button>
-      <button id="recordBtn" aria-label="record" disabled></button>
-      <button id="refreshBtn" aria-label="refresh" title="刷新">&#10227; 刷新</button>
-      <button id="paletteBtn" disabled>&#9703; 配色</button>
-      <button id="formBtn" disabled>&#9671; 形态</button>
-      <button id="cameraBtn" aria-expanded="false" disabled>&#9711; 运镜</button>
-      <div id="cameraMenu" hidden></div>
-      <button id="settingsBtn" disabled>&#9881; 设置</button>
-      <div id="settingsPanel" hidden>
-        <button id="mistRow" class="row">云雾<span class="state">开</span></button>
-        <button id="comboRow" class="row">连击特效<span class="state">开</span></button>
-        <button id="fadeRow" class="row">渐隐谢幕<span class="state">关</span></button>
-        <button id="breathRow" class="row">余韵呼吸<span class="state">关</span></button>
-        <button id="floorRow" class="row">地形频谱<span class="state">关</span></button>
+      <header class="hud-brand">
+        <div id="titleBar">
+          <span class="dot"></span>
+          <span class="brand">LUMISONG</span>
+        </div>
+        <button id="helpBtn" type="button" aria-label="帮助">?</button>
+        <span id="trackStatus" hidden></span>
+      </header>
+
+      <aside class="hud-aside">
+        <div id="legend"></div>
+      </aside>
+
+      <div class="hud-transport">
+        <div class="progress-host">
+          <input id="progressBar" class="dock-scrubber" type="range" min="0" max="1000" value="0" step="1" disabled aria-label="播放进度" />
+          <div class="progress-times">
+            <span id="progressNow">0:00</span>
+            <span id="progressDur">0:00</span>
+          </div>
+        </div>
+        <footer class="hud-dock">
+          <div class="dock-body">
+        <div class="dock-group dock-visual">
+          <button id="paletteBtn" class="dock-btn" type="button" disabled>配色</button>
+          <button id="formBtn" class="dock-btn" type="button" disabled>形态</button>
+          <div class="dock-popover-host">
+            <button id="cameraBtn" class="dock-btn" type="button" aria-expanded="false" disabled>运镜</button>
+            <div id="cameraMenu" hidden></div>
+          </div>
+        </div>
+        <div class="dock-group dock-transport">
+          <button id="playBtn" class="dock-play" type="button" aria-label="播放" disabled>&#9654;</button>
+        </div>
+        <div class="dock-right">
+          <div class="dock-group dock-io">
+            <button id="uploadBtn" class="dock-btn" type="button" disabled>上传</button>
+            <button id="recordBtn" class="dock-btn" type="button" aria-label="录音" disabled></button>
+            <button id="refreshBtn" class="dock-btn" type="button" aria-label="refresh" title="刷新">刷新</button>
+          </div>
+          <div class="dock-group dock-system">
+            <div class="dock-popover-host">
+              <button id="settingsBtn" class="dock-btn" type="button" disabled>设置</button>
+              <div id="settingsPanel" hidden>
+                <button id="guidesRow" class="row" type="button">读图标注<span class="state">开</span></button>
+                <button id="mistRow" class="row" type="button">云雾<span class="state">开</span></button>
+                <button id="comboRow" class="row" type="button">连击特效<span class="state">开</span></button>
+                <button id="fadeRow" class="row" type="button">渐隐谢幕<span class="state">关</span></button>
+                <button id="breathRow" class="row" type="button">余韵呼吸<span class="state">关</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </footer>
       </div>
       <input type="file" id="fileInput" accept="audio/*" hidden />
-      <div id="attribution">
-        Visual language inspired by Lucio Arese&rsquo;s &ldquo;Seeing Birdsong&rdquo; (lucioarese.net).
-        Independent web reimplementation.
-      </div>
     </div>
+
+    <button id="fullscreenBtn" class="hud-fullscreen" type="button" aria-label="全屏" aria-pressed="false">全屏</button>
+    <button id="immersivePlayBtn" class="immersive-play" type="button" aria-label="播放" title="空格 / K" disabled>&#9654;</button>
+
     <div id="overlay">
       <div id="overlayMsg">Loading&hellip;</div>
-      <button id="retryBtn" hidden>Retry</button>
+      <button id="retryBtn" type="button" hidden>Retry</button>
     </div>
+
+    <div id="helpDialog" hidden>
+      <div class="help-card">
+        <div class="help-kicker">GUIDE</div>
+        <h2>如何使用 Lumisong</h2>
+        <p class="help-lead">Lumisong（鸣光）把一段<b>任意音频</b>（音乐、语音、鸟鸣或环境声）变成三维<b>声音图谱</b>——每个发光体对应一个检测到的<b>声音事件</b>。</p>
+        <section class="help-section">
+          <h3>怎么读画面</h3>
+          <ul>
+            <li><b>位置</b>：横向是时间，纵向是音色亮度，纵深是音调纯净度；靠近的光体，时间或音色往往相近</li>
+            <li><b>颜色</b>：频谱宽窄（对照左侧色条）</li>
+            <li><b>大小</b>：响度——越强越大</li>
+            <li><b>连线</b>：按时间顺序串联轨迹；已播放为实线，未播放为虚线</li>
+          </ul>
+        </section>
+        <section class="help-section">
+          <h3>播放时</h3>
+          <p>最亮的那颗是当前正在响的事件；流光沿轨迹穿梭，表示播放进度。</p>
+        </section>
+        <section class="help-section">
+          <h3>底栏控制</h3>
+          <ul>
+            <li><b>配色 / 形态</b>：切换色谱与几何（玻璃球、光针、涟漪、晶钻、星环）——同一数据，不同外观</li>
+            <li><b>运镜</b>：智能运镜（默认）、匀速、自由、飞船驾驶；「更多」含飞船穿梭、呼吸环绕</li>
+            <li><b>上传 / 录音</b>：分析你自己的音频并可视化</li>
+            <li><b>设置</b>：读图标注（色条与频率数字）、云雾、连击、渐隐谢幕、余韵呼吸</li>
+          </ul>
+        </section>
+        <p class="help-note">视觉语言受 Lucio Arese《Seeing Birdsong》启发；本项目为面向通用音频的独立实现。</p>
+        <div class="help-actions">
+          <button id="helpCloseBtn" type="button">知道了</button>
+        </div>
+      </div>
+    </div>
+
     <div id="profileDialog" hidden>
       <div class="profile-card">
         <div class="profile-kicker">AUDIO PROFILE</div>
@@ -75,7 +135,6 @@
       </div>
     </div>
     <script>
-      // 全局错误捕获（调试/诊断用，零开销）
       window.addEventListener('error', (e) => {
         window.__lastErr = `${e.message} @ ${e.filename}:${e.lineno}:${e.colno}`;
       });

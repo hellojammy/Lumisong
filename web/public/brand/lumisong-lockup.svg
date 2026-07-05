@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">Lumisong logo lockup</title>
+  <desc id="desc">Lumisong wordmark with final glowing audio-event atlas mark and secondary Chinese name.</desc>
+  <defs>
+    <radialGradient id="markBg" cx="28%" cy="18%" r="78%">
+      <stop offset="0" stop-color="#10233a"/>
+      <stop offset="0.48" stop-color="#07101d"/>
+      <stop offset="1" stop-color="#05070d"/>
+    </radialGradient>
+    <linearGradient id="trail" x1="64" y1="132" x2="206" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="0.56" stop-color="#67e8f9"/>
+      <stop offset="1" stop-color="#e0f2fe"/>
+    </linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.16 0 0 0 0 0.62 0 0 0 0 1 0 0 0 0.66 0"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="360" fill="none"/>
+  <g transform="translate(72 56)">
+    <rect width="248" height="248" rx="58" fill="url(#markBg)"/>
+    <g opacity="0.2" stroke="#38bdf8" stroke-width="0.8">
+      <path d="M36 202H212"/><path d="M48 188H200"/><path d="M60 176H188"/><path d="M74 166H174"/>
+      <path d="M42 208L90 154"/><path d="M88 218L106 150"/><path d="M132 220L124 148"/><path d="M194 208L160 154"/>
+    </g>
+    <g fill="#7dd3fc" opacity="0.26">
+      <circle cx="68" cy="110" r="2"/><circle cx="86" cy="88" r="1.8"/><circle cx="112" cy="132" r="1.7"/>
+      <circle cx="136" cy="72" r="2"/><circle cx="152" cy="122" r="1.6"/><circle cx="174" cy="90" r="1.8"/>
+      <circle cx="186" cy="136" r="1.8"/><circle cx="102" cy="156" r="1.7"/><circle cx="144" cy="154" r="2"/>
+    </g>
+    <path d="M62 124C80 112 92 96 112 101C132 106 134 78 154 74C174 70 180 98 204 88" fill="none" stroke="url(#trail)" stroke-width="3.2" stroke-linecap="round" filter="url(#glow)"/>
+    <g filter="url(#glow)">
+      <circle cx="62" cy="124" r="7.5" fill="#67e8f9"/>
+      <circle cx="112" cy="101" r="9.5" fill="#38bdf8"/>
+      <circle cx="154" cy="74" r="7.2" fill="#a5f3fc"/>
+      <circle cx="180" cy="98" r="6.2" fill="#60a5fa"/>
+      <circle cx="204" cy="88" r="8.3" fill="#7dd3fc"/>
+    </g>
+    <circle cx="112" cy="101" r="3.6" fill="#f97316"/>
+  </g>
+  <g transform="translate(382 105)">
+    <text x="0" y="86" fill="#eef3fa" font-family="'Space Grotesk', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif" font-size="76" font-weight="700" letter-spacing="3">Lumisong</text>
+    <text x="6" y="136" fill="#7d8fa9" font-family="'Space Grotesk', 'PingFang SC', 'Hiragino Sans GB', sans-serif" font-size="28" font-weight="500" letter-spacing="8">鸣光</text>
+  </g>
+</svg>

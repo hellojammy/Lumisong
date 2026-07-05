@@ -16,7 +16,7 @@ test('app labels and permission text use generic audio language', () => {
   const analyzer = read('src/analyzerEssentia.ts');
   const iosInfo = read('../ios/Lumisong/Info.plist');
 
-  assert.match(main, /声音事件 EVENTS/);
+  assert.match(main, /setTrackStatus|profileLabel/);
   assert.doesNotMatch(main, /音节 SYLLABLES/);
   assert.doesNotMatch(analyzer, /未检测到鸣叫音节/);
   assert.doesNotMatch(iosInfo, /采集鸟鸣/);

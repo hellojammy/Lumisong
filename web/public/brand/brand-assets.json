@@ -1,0 +1,61 @@
+{
+  "brand": {
+    "primaryName": "Lumisong",
+    "secondaryName": "鸣光",
+    "positioning": "3D audio visualization for music, voice, birdsong, and ambient sound"
+  },
+  "canonicalConcept": "glowing sound-event atlas",
+  "sourceOfTruth": [
+    "BRAND.md",
+    "openspec/design/brand-identity.md"
+  ],
+  "assets": {
+    "markSvg": "/brand/lumisong-mark.svg",
+    "flatMarkSvg": "/brand/lumisong-flat-mark.svg",
+    "lockupSvg": "/brand/lumisong-lockup.svg",
+    "faviconSvg": "/favicon.svg",
+    "appIconPng1024": "/brand/lumisong-app-icon-1024.png",
+    "markPng512": "/brand/lumisong-mark-512.png",
+    "markPng256": "/brand/lumisong-mark-256.png",
+    "lockupPng1600": "/brand/lumisong-lockup-1600.png",
+    "githubReadmeHeroSvg": "/brand/github-readme-hero.svg",
+    "githubReadmeHeroPng": "/brand/github-readme-hero.png",
+    "githubSocialCardPng": "/brand/github-social-card.png",
+    "webAppleTouchIcon": "/apple-touch-icon.png",
+    "webIcon192": "/icon-192.png",
+    "webIcon512": "/icon-512.png",
+    "webMaskableIcon512": "/maskable-icon-512.png",
+    "webManifest": "/site.webmanifest",
+    "repoIosAppIconSet": "ios/Lumisong/Assets.xcassets/AppIcon.appiconset",
+    "repoMacosIcns": "macos/Resources/LumisongIcon.icns",
+    "faviconPng256": "/brand/favicon-256.png",
+    "faviconPng64": "/brand/favicon-64.png",
+    "image2ReferenceBoard": "/brand/reference/lumisong-logo-final-image2-board.png"
+  },
+  "colors": {
+    "background": "#05070d",
+    "cyan": "#67e8f9",
+    "blue": "#38bdf8",
+    "softBlue": "#60a5fa",
+    "orangeAccent": "#f97316"
+  },
+  "rules": {
+    "use": [
+      "five primary sound-event nodes",
+      "faint secondary event dots",
+      "one cyan playback light path",
+      "one small orange energy accent",
+      "subtle dense perspective grid"
+    ],
+    "avoid": [
+      "birds",
+      "music notes",
+      "microphones",
+      "vinyl records",
+      "headphones",
+      "waveform bars",
+      "staff notation",
+      "literal galaxy spirals"
+    ]
+  }
+}

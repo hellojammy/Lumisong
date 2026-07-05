@@ -34,8 +34,13 @@ import { createEnvironment } from './environment';
 import { setPalette, nextPalette, getPalette } from './colormap';
 import { ComboPopups } from './combo';
 import { Playback, type PlaybackSource } from './playback';
-import { analyzeRhythmBuffer } from './rhythmBands';
-import { RhythmFloor } from './rhythmFloor';
+import {
+  DEFAULT_APP_SETTINGS,
+  applyDefaultSettingsMigration,
+  storedBooleanSetting,
+  storedSetting,
+  type BooleanSettingKey,
+} from './appDefaults';
 import {
   installNativeAudioCallbacks, installUploadCallback,
   hasNativeAudio, nativePickAndPlay, nativePlayRecording, resetNativeAudio,
@@ -61,38 +66,106 @@ const mistRow = $<HTMLButtonElement>('mistRow');
 const comboRow = $<HTMLButtonElement>('comboRow');
 const fadeRow = $<HTMLButtonElement>('fadeRow');
 const breathRow = $<HTMLButtonElement>('breathRow');
-const floorRow = $<HTMLButtonElement>('floorRow');
-const fxOn = (key: string): boolean => localStorage.getItem(key) === '1'; // 特效默认关（含地形频谱 rhythmFloor）
+const guidesRow = $<HTMLButtonElement>('guidesRow');
+const legendAside = document.querySelector('.hud-aside') as HTMLElement;
+const fxOn = (key: BooleanSettingKey): boolean => storedBooleanSetting(key);
 const fileInput = $<HTMLInputElement>('fileInput');
-const titleEl = $('title');
-const statsEl = $('stats');
-const infoBtn = $<HTMLButtonElement>('infoBtn');
-const infoPanel = $('infoPanel');
+const trackStatus = $('trackStatus');
+const helpBtn = $<HTMLButtonElement>('helpBtn');
+const helpDialog = $('helpDialog');
+const helpCloseBtn = $<HTMLButtonElement>('helpCloseBtn');
+const fullscreenBtn = $<HTMLButtonElement>('fullscreenBtn');
+const immersivePlayBtn = $<HTMLButtonElement>('immersivePlayBtn');
+const progressBar = $<HTMLInputElement>('progressBar');
+const progressNow = $('progressNow');
+const progressDur = $('progressDur');
+const progressHost = document.querySelector('.progress-host') as HTMLElement;
 const profileDialog = $('profileDialog');
+
+function formatPlaybackTime(sec: number): string {
+  const clamped = Math.max(0, sec);
+  const m = Math.floor(clamped / 60);
+  const s = Math.floor(clamped % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function setProgressFill(): void {
+  const max = Number(progressBar.max) || 1;
+  const val = Number(progressBar.value);
+  progressBar.style.setProperty('--progress', `${(val / max) * 100}%`);
+}
 const profileGuessText = $('profileGuessText');
 const profileOptions = $('profileOptions');
 const profileConfirmBtn = $<HTMLButtonElement>('profileConfirmBtn');
 const profileCancelBtn = $<HTMLButtonElement>('profileCancelBtn');
 
-// 说明面板（010）：默认隐藏，点击开关
-infoBtn.addEventListener('click', () => {
-  infoPanel.hidden = !infoPanel.hidden;
-  infoBtn.classList.toggle('active', !infoPanel.hidden);
+function setTrackStatus(text: string): void {
+  trackStatus.hidden = !text;
+  trackStatus.textContent = text;
+}
+
+const closeHelp = (): void => { helpDialog.hidden = true; };
+const openHelp = (): void => {
+  closeCameraMenuEarly();
+  settingsPanel.hidden = true;
+  settingsBtn.classList.remove('active');
+  helpDialog.hidden = false;
+};
+
+let closeCameraMenuEarly = (): void => {};
+helpBtn.addEventListener('click', (event) => {
+  event.stopPropagation();
+  if (helpDialog.hidden) openHelp();
+  else closeHelp();
+});
+helpCloseBtn.addEventListener('click', closeHelp);
+helpDialog.addEventListener('click', (event) => {
+  if (event.target === helpDialog) closeHelp();
 });
 
-/** uupm 式数据卡：蓝色大数字 + 灰色小标签（009） */
-function renderStats(meta: SyllablesJson['meta']): void {
-  const rate = (meta.nSyllables / meta.duration).toFixed(1);
-  const items: [string, string][] = [
-    [String(meta.nSyllables), '声音事件 EVENTS'],
-    [`${meta.duration.toFixed(1)}s`, '时长 DURATION'],
-    [`${(meta.sampleRate / 1000).toFixed(1)}k`, '采样率 RATE'],
-    [`${rate}/s`, '密度 DENSITY'],
-  ];
-  statsEl.innerHTML = items
-    .map(([num, lab]) => `<div class="stat"><span class="num">${num}</span><span class="lab">${lab}</span></div>`)
-    .join('');
-}
+let immersiveFallback = false;
+const isImmersive = (): boolean =>
+  !!document.fullscreenElement || immersiveFallback;
+
+const syncImmersiveUI = (): void => {
+  const on = isImmersive();
+  document.body.classList.toggle('is-immersive', on);
+  fullscreenBtn.textContent = on ? '退出' : '全屏';
+  fullscreenBtn.setAttribute('aria-label', on ? '退出全屏' : '全屏');
+  fullscreenBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  if (!on) return;
+  closeHelp();
+  profileDialog.hidden = true;
+  settingsPanel.hidden = true;
+  settingsBtn.classList.remove('active');
+  cameraMenu.hidden = true;
+  cameraBtn.classList.remove('active');
+  cameraBtn.setAttribute('aria-expanded', 'false');
+  closeCameraMenuEarly();
+};
+
+const enterImmersive = async (): Promise<void> => {
+  try {
+    await document.documentElement.requestFullscreen();
+  } catch {
+    immersiveFallback = true;
+    syncImmersiveUI();
+  }
+};
+
+const exitImmersive = async (): Promise<void> => {
+  immersiveFallback = false;
+  if (document.fullscreenElement) {
+    try { await document.exitFullscreen(); } catch { /* 忽略 */ }
+  }
+  syncImmersiveUI();
+};
+
+fullscreenBtn.addEventListener('click', () => {
+  void (isImmersive() ? exitImmersive() : enterImmersive());
+});
+document.addEventListener('fullscreenchange', syncImmersiveUI);
+
 const canvas = $<HTMLCanvasElement>('gl') as unknown as HTMLCanvasElement;
 
 let onRetry: () => void = () => window.location.reload();
@@ -159,7 +232,8 @@ function chooseProfile(guess: AudioProfileGuess): Promise<AudioProfileKey | null
 async function boot(): Promise<void> {
   let ctx: AudioContext;
   try {
-    setPalette(localStorage.getItem('palette') ?? 'ice'); // 006：配色持久化，默认冰蓝
+    applyDefaultSettingsMigration();
+    setPalette(storedSetting('palette')); // 006：配色持久化，默认融金
     const data = await loadData('/data/syllables.json');
     const audioRes = await fetch(`/data/${data.meta.audioFile}`);
     if (!audioRes.ok) throw new Error(`音频加载失败：HTTP ${audioRes.status}`);
@@ -184,40 +258,89 @@ async function boot(): Promise<void> {
     let ship: ShipCruise | null = null;
     let playback: Playback | null = null;
     let combo: ComboPopups | null = null;
-    let rhythmFloor: RhythmFloor | null = null;
-    let currentAudioBuffer: AudioBuffer | null = null; // 当前可视化的音频，供地形频谱按需重建
     let currentSpreadP99 = data.meta.ranges.spreadHz.p99;
     let currentData: SyllablesJson = data;
     // 015 形态：持久化 + 校验
     let currentForm: FormKey = (() => {
-      const saved = localStorage.getItem('form');
-      return FORMS.some((f) => f.key === saved) ? (saved as FormKey) : 'orb';
+      const saved = storedSetting('form');
+      return FORMS.some((f) => f.key === saved) ? (saved as FormKey) : DEFAULT_APP_SETTINGS.form;
     })();
     let currentCameraMode: CameraMode = (() => {
-      const saved = localStorage.getItem('cameraMode');
+      const saved = storedSetting('cameraMode');
       const mode = normalizeCameraMode(saved);
       if (saved !== mode) localStorage.setItem('cameraMode', mode);
       return mode;
     })();
     let finaleCruisePending = false;
+    let scrubbing = false;
+
+    const resetProgress = (duration: number): void => {
+      if (duration <= 0) {
+        progressBar.disabled = true;
+        progressBar.value = '0';
+        progressNow.textContent = '0:00';
+        progressDur.textContent = '0:00';
+        setProgressFill();
+        return;
+      }
+      progressBar.disabled = false;
+      progressBar.max = String(Math.max(1, Math.round(duration * 1000)));
+      progressBar.value = '0';
+      progressNow.textContent = '0:00';
+      progressDur.textContent = formatPlaybackTime(duration);
+      setProgressFill();
+    };
+
+    const seekTo = (pos: number): void => {
+      if (!playback || !cloud) return;
+      const t = Math.max(0, Math.min(pos, playback.duration));
+      playback.seek(t);
+      playbackFinished = false;
+      if (t < playback.duration - 0.01) {
+        finaleCruisePending = false;
+        rig?.setCruiseOverride(false);
+      }
+      cloud.updateFlare(t);
+      progressNow.textContent = formatPlaybackTime(t);
+      progressBar.value = String(Math.round(t * 1000));
+      setProgressFill();
+    };
+
+    progressBar.addEventListener('pointerdown', () => {
+      scrubbing = true;
+      progressHost.classList.add('is-scrubbing');
+    });
+    progressBar.addEventListener('pointerup', () => {
+      if (!scrubbing) return;
+      scrubbing = false;
+      progressHost.classList.remove('is-scrubbing');
+      seekTo(Number(progressBar.value) / 1000);
+    });
+    progressBar.addEventListener('pointercancel', () => {
+      scrubbing = false;
+      progressHost.classList.remove('is-scrubbing');
+    });
+    progressBar.addEventListener('input', () => {
+      const t = Number(progressBar.value) / 1000;
+      progressNow.textContent = formatPlaybackTime(t);
+      setProgressFill();
+      if (scrubbing && cloud) cloud.updateFlare(t);
+    });
+
+    const syncGuides = (): void => {
+      const on = fxOn('guides');
+      legendAside.hidden = !on;
+      cloud?.setGuidesVisible(on);
+    };
+    let playbackFinished = false;
 
     const setBtn = (playing: boolean): void => {
-      playBtn.innerHTML = playing ? '&#10074;&#10074;' : '&#9654;';
-      playBtn.setAttribute('aria-label', playing ? 'pause' : 'play');
-    };
-
-    // —— 地形频谱（可选，设置开关，默认关；关时不入场景、不影响原效果）——
-    const buildFloor = (): void => {
-      if (!cloud || !currentAudioBuffer || rhythmFloor) return;
-      rhythmFloor = new RhythmFloor(analyzeRhythmBuffer(currentAudioBuffer));
-      rhythmFloor.fit(cloud.center, cloud.vertRadius, cloud.horizRadius);
-      scene.add(rhythmFloor.group); // 并入主场景：随主相机 orbit/zoom
-    };
-    const removeFloor = (): void => {
-      if (!rhythmFloor) return;
-      scene.remove(rhythmFloor.group);
-      rhythmFloor.dispose();
-      rhythmFloor = null;
+      const icon = playing ? '&#10074;&#10074;' : '&#9654;';
+      const label = playing ? 'pause' : 'play';
+      playBtn.innerHTML = icon;
+      playBtn.setAttribute('aria-label', label);
+      immersivePlayBtn.innerHTML = icon;
+      immersivePlayBtn.setAttribute('aria-label', label);
     };
 
     /** 用一份数据 + 音频（重）建可视化（BV-ba-06：先释放旧场景）
@@ -239,20 +362,20 @@ async function boot(): Promise<void> {
         scene.remove(ship.group);
         ship.dispose();
       }
-      removeFloor();
       currentData = d;
+      playbackFinished = false;
+      setTrackStatus('');
       cloud = new SyllableCloud(d, currentForm);
       cloud.setEffects(fxOn('fxFade'), fxOn('fxBreath')); // 020
+      syncGuides();
       scene.add(cloud.group);
       // 016 连击：阈值随这段录音的中位间隔自适应；017 开关持久化
       if (combo) scene.remove(combo.group);
       combo = new ComboPopups(cloud.medianGap);
-      combo.setEnabled(localStorage.getItem('combo') !== '0');
+      combo.setEnabled(storedBooleanSetting('combo'));
       scene.add(combo.group);
       cloud.onSyllableStart = (_i, t, pos) => combo?.onSyllable(t, pos);
       env.fit(cloud.center, cloud.vertRadius, cloud.horizRadius); // 网格/云雾带随新数据归位
-      currentAudioBuffer = audioBuffer;
-      if (fxOn('rhythmFloor')) buildFloor(); // 仅在设置开启时显示地形频谱（默认关）
       ship = new ShipCruise(cloud.center, {
         horizRadius: cloud.horizRadius,
         vertRadius: cloud.vertRadius,
@@ -268,7 +391,7 @@ async function boot(): Promise<void> {
       messenger.reset();
       currentSpreadP99 = d.meta.ranges.spreadHz.p99;
       buildLegend($('legend'), currentSpreadP99);
-      renderStats(d.meta);
+      resetProgress(d.meta.duration);
       fx.setTrail(currentForm); // 尾影随形态差异化
       messenger.setForm(currentForm); // 哨箭头随形态（尾影=头残影）
       setBtn(false);
@@ -277,11 +400,12 @@ async function boot(): Promise<void> {
     // 默认音频走原生 bundle 直读（原生从 WebContent/data/<audioFile> 读播）
     mount(data, buffer, { kind: 'bundle', file: data.meta.audioFile });
     playBtn.disabled = false;
+    immersivePlayBtn.disabled = false;
     uploadBtn.disabled = false;
 
     // —— 006 配色探索器：一键轮换、原地重着色、不打断播放 ——
     const syncPaletteUI = (): void => {
-      paletteBtn.textContent = `◧ 配色 · ${getPalette().label}`;
+      paletteBtn.textContent = `配色 · ${getPalette().label}`;
     };
     syncPaletteUI();
     paletteBtn.disabled = false;
@@ -296,7 +420,7 @@ async function boot(): Promise<void> {
     // —— 015 形态切换：仅重建 cloud，播放/相机/环境不动 ——
     const syncFormUI = (): void => {
       const f = FORMS.find((x) => x.key === currentForm) ?? FORMS[0];
-      formBtn.textContent = `◇ 形态 · ${f.label}`;
+      formBtn.textContent = `形态 · ${f.label}`;
     };
     syncFormUI();
     formBtn.disabled = false;
@@ -305,16 +429,42 @@ async function boot(): Promise<void> {
       currentForm = FORMS[(i + 1) % FORMS.length].key;
       localStorage.setItem('form', currentForm);
       if (cloud) {
+        const wasPlaying = playback?.playing ?? false;
+        const playbackTime = playback?.now() ?? 0;
+        const playbackEnded = playbackFinished
+          || playback?.finished
+          || (!!playback && playbackTime >= playback.duration - 0.01);
+        const finishedTime = playback?.duration ?? playbackTime;
+        const wasFinaleActive = cloud.isFinaleActive();
+        const wasGhostReplay = cloud.isGhostReplayState();
         scene.remove(cloud.group);
         cloud.dispose();
         cloud = new SyllableCloud(currentData, currentForm);
         scene.add(cloud.group);
-        // 019：暂停时 updateFlare 不再每帧驱动，重建后须主动灌一次进度并落定
-        cloud.updateFlare(playback?.now() ?? 0);
-        if (!playback?.playing) cloud.settle();
         cloud.setEffects(fxOn('fxFade'), fxOn('fxBreath')); // 020 特效随重建恢复
+        syncGuides();
+        if (wasFinaleActive) {
+          // 播完谢幕中切形态：新 cloud 继承谢幕语义，避免 updateFlare 取消谢幕。
+          cloud.updateEffects(wall);
+          finaleCruisePending = shouldUseFinaleCruise(currentCameraMode) && cloud.startFinale();
+          rig?.setCruiseOverride(false);
+        } else if (playbackEnded && !wasPlaying) {
+          // 播完后自动巡航中切形态：谢幕幽灵态继承幽灵；否则定格全图亮态。
+          if (wasGhostReplay) cloud.syncGhostState();
+          else cloud.syncFinished(finishedTime);
+          finaleCruisePending = false;
+          rig?.setCruiseOverride(shouldUseFinaleCruise(currentCameraMode));
+        } else {
+          // 019：暂停时 updateFlare 不再每帧驱动，重建后须主动灌一次进度并落定
+          cloud.updateFlare(playbackTime);
+          if (!wasPlaying) cloud.settle();
+        }
         cloud.onSyllableStart = (_i, t, pos) => combo?.onSyllable(t, pos); // 016 重接连击（灌进度之后，避免补发连击）
-        rhythmFloor?.fit(cloud.center, cloud.vertRadius, cloud.horizRadius);
+        env.fit(cloud.center, cloud.vertRadius, cloud.horizRadius);
+        rig?.setBounds(cloud.center, {
+          horizRadius: cloud.horizRadius,
+          vertRadius: cloud.vertRadius,
+        });
       }
       fx.setTrail(currentForm); // 尾影随形态差异化
       messenger.setForm(currentForm); // 哨箭头随形态（尾影=头残影）
@@ -329,6 +479,7 @@ async function boot(): Promise<void> {
       cameraBtn.classList.remove('active');
       cameraBtn.setAttribute('aria-expanded', 'false');
     };
+    closeCameraMenuEarly = closeCameraMenu;
     const selectCameraMode = (key: CameraMode): void => {
       currentCameraMode = key;
       localStorage.setItem('cameraMode', currentCameraMode);
@@ -367,13 +518,14 @@ async function boot(): Promise<void> {
       );
     };
     const syncCameraUI = (): void => {
-      cameraBtn.textContent = `◎ 运镜 · ${cameraModeLabel(currentCameraMode)}`;
+      cameraBtn.textContent = `运镜 · ${cameraModeLabel(currentCameraMode)}`;
       renderCameraMenu();
     };
     syncCameraUI();
     cameraBtn.disabled = false;
     cameraBtn.addEventListener('click', (event) => {
       event.stopPropagation();
+      closeHelp();
       settingsPanel.hidden = true;
       settingsBtn.classList.remove('active');
       const willOpen = cameraMenu.hasAttribute('hidden');
@@ -388,10 +540,13 @@ async function boot(): Promise<void> {
     cameraMenu.addEventListener('click', (event) => event.stopPropagation());
     document.addEventListener('click', closeCameraMenu);
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closeCameraMenu();
+      if (event.key === 'Escape') {
+        closeCameraMenu();
+        closeHelp();
+      }
     });
 
-    // —— 017 设置折叠面板：开关类配置收纳（云雾 008 / 连击 016），形态与配色留在外 ——
+    // —— 017 设置折叠面板
     const syncRows = (): void => {
       const mistOn = env.mistEnabled();
       (mistRow.querySelector('.state') as HTMLElement).textContent = mistOn ? '开' : '关';
@@ -406,14 +561,17 @@ async function boot(): Promise<void> {
       const breathOn = fxOn('fxBreath');
       (breathRow.querySelector('.state') as HTMLElement).textContent = breathOn ? '开' : '关';
       breathRow.classList.toggle('off', !breathOn);
-      const floorOn = fxOn('rhythmFloor');
-      (floorRow.querySelector('.state') as HTMLElement).textContent = floorOn ? '开' : '关';
-      floorRow.classList.toggle('off', !floorOn);
+      const guidesOn = fxOn('guides');
+      (guidesRow.querySelector('.state') as HTMLElement).textContent = guidesOn ? '开' : '关';
+      guidesRow.classList.toggle('off', !guidesOn);
     };
-    env.setMist(localStorage.getItem('mist') !== '0');
+    env.setMist(storedBooleanSetting('mist'));
+    syncGuides();
     syncRows();
     settingsBtn.disabled = false;
-    settingsBtn.addEventListener('click', () => {
+    settingsBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      closeHelp();
       closeCameraMenu();
       settingsPanel.hidden = !settingsPanel.hidden;
       settingsBtn.classList.toggle('active', !settingsPanel.hidden);
@@ -429,38 +587,54 @@ async function boot(): Promise<void> {
       localStorage.setItem('combo', on ? '1' : '0');
       syncRows();
     });
-    const fxToggle = (key: string): void => {
+    const fxToggle = (key: BooleanSettingKey): void => {
       localStorage.setItem(key, fxOn(key) ? '0' : '1');
       cloud?.setEffects(fxOn('fxFade'), fxOn('fxBreath'));
       syncRows();
     };
     fadeRow.addEventListener('click', () => fxToggle('fxFade'));
     breathRow.addEventListener('click', () => fxToggle('fxBreath'));
-    floorRow.addEventListener('click', () => {
-      const on = !fxOn('rhythmFloor');
-      localStorage.setItem('rhythmFloor', on ? '1' : '0');
-      if (on) buildFloor(); else removeFloor(); // 即时显隐，无需重载
+    guidesRow.addEventListener('click', () => {
+      const on = !fxOn('guides');
+      localStorage.setItem('guides', on ? '1' : '0');
+      syncGuides();
       syncRows();
     });
 
     // —— 播放控制 ——
-    playBtn.addEventListener('click', () => {
-      void (async () => {
-        if (!playback) return;
-        if (playback.busy) return; // 原生播放/暂停确认中，忽略快点，避免状态交错
-        if (!playback.playing) {
-          unlockAudio(ctx); // iOS/Safari：用户手势内同步解锁 WebAudio 输出（BV-sh-01）
-          finaleCruisePending = false;
-          rig?.setCruiseOverride(false);
-          const started = await playback.play();
-          setBtn(started);
-        } else {
-          playback.pause();
-          cloud?.settle();    // 019：爆亮落定，画面真正「停」下来
-          messenger.reset();
-          setBtn(false);
-        }
-      })();
+    const togglePlayback = async (): Promise<void> => {
+      if (!playback) return;
+      if (playback.busy) return;
+      if (!playback.playing) {
+        unlockAudio(ctx);
+        playbackFinished = false;
+        finaleCruisePending = false;
+        rig?.setCruiseOverride(false);
+        const started = await playback.play();
+        setBtn(started);
+      } else {
+        playback.pause();
+        cloud?.settle();
+        messenger.reset();
+        setBtn(false);
+      }
+    };
+
+    playBtn.addEventListener('click', () => { void togglePlayback(); });
+    immersivePlayBtn.addEventListener('click', () => { void togglePlayback(); });
+    const isPlayShortcut = (event: KeyboardEvent): boolean => {
+      const k = event.code === 'KeyK' && !event.ctrlKey && !event.metaKey && !event.altKey;
+      const space = event.code === 'Space' || event.key === ' ';
+      if (space && currentCameraMode === 'pilot') return false; // 飞船驾驶保留空格加速
+      return k || space;
+    };
+    document.addEventListener('keydown', (event) => {
+      if (!isPlayShortcut(event)) return;
+      if (!helpDialog.hidden || !profileDialog.hidden) return;
+      const tag = (event.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      event.preventDefault();
+      void togglePlayback();
     });
 
     // —— 上传：浏览器内分析 → 重建 → 自动播放（spec browser-analysis）——
@@ -484,7 +658,7 @@ async function boot(): Promise<void> {
         profile,
       );
       mount(d, audioBuffer, source);
-      titleEl.textContent = `${name} · ${profileLabel(profile)}`;
+      setTrackStatus(`${name} · ${profileLabel(profile)}`);
       hideOverlay();
       const started = await playback?.play() ?? false;
       setBtn(started);
@@ -544,6 +718,7 @@ async function boot(): Promise<void> {
 
     const setNonRecordUIDisabled = (disabled: boolean): void => {
       playBtn.disabled = disabled;
+      immersivePlayBtn.disabled = disabled;
       uploadBtn.disabled = disabled;
       paletteBtn.disabled = disabled;
       formBtn.disabled = disabled;
@@ -555,7 +730,6 @@ async function boot(): Promise<void> {
       if (cloud) { scene.remove(cloud.group); cloud.dispose(); }
       rig?.dispose();
       if (ship) { scene.remove(ship.group); ship.dispose(); }
-      removeFloor();
       playback = null;
 
       recData = {
@@ -569,10 +743,11 @@ async function boot(): Promise<void> {
       currentData = recData;
       cloud = new SyllableCloud(recData, currentForm, RECORD_CAPACITY);
       cloud.setEffects(fxOn('fxFade'), fxOn('fxBreath'));
+      syncGuides();
       scene.add(cloud.group);
       if (combo) scene.remove(combo.group);
       combo = new ComboPopups(cloud.medianGap);
-      combo.setEnabled(localStorage.getItem('combo') !== '0');
+      combo.setEnabled(storedBooleanSetting('combo'));
       scene.add(combo.group);
       cloud.onSyllableStart = (_i, t, pos) => combo?.onSyllable(t, pos);
       env.fit(cloud.center, cloud.vertRadius, cloud.horizRadius);
@@ -585,10 +760,10 @@ async function boot(): Promise<void> {
       }, currentCameraMode, new CameraDirector(recData), new CameraDirectorV2(recData),
         ship, renderer.domElement);
       messenger.reset();
-      renderStats(recData.meta);
+      resetProgress(0);
       fx.setTrail('orb'); // 录音态强制 orb 形态（见 SyllableCloud capacity 分支）
       messenger.setForm('orb');
-      titleEl.textContent = '录音中…';
+      setTrackStatus('录音中…');
     };
 
     const onRecordChunk = (pcm: Float32Array): void => {
@@ -608,7 +783,6 @@ async function boot(): Promise<void> {
       if (newSyllables.length) {
         cloud.appendSyllables(newSyllables, recData.meta);
         recData.meta.nSyllables = cloud.syllableCount;
-        renderStats(recData.meta);
         env.fit(cloud.center, cloud.vertRadius, cloud.horizRadius);
         rig?.setBounds(cloud.center, {
           horizRadius: cloud.horizRadius, vertRadius: cloud.vertRadius,
@@ -694,7 +868,7 @@ async function boot(): Promise<void> {
       } else {
         mount(playData, audioBuffer);
       }
-      titleEl.textContent = '录音回放';
+      setTrackStatus('录音回放');
       recordBtn.disabled = false;
       setRecordBtn(false);
       setNonRecordUIDisabled(false);
@@ -709,12 +883,14 @@ async function boot(): Promise<void> {
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && recState === 'idle') hideOverlay();
     });
-    // 测试钩子：从 URL 走完整分析路径（供预览验证浏览器内管线）
-    (window as unknown as { __analyzeUrl?: (u: string) => Promise<number | null> }).__analyzeUrl =
-      async (url: string) => {
-        const res = await fetch(url);
-        return ingest(await res.arrayBuffer(), url.split('/').pop() ?? 'upload');
-      };
+    // 开发测试钩子：从 URL 走完整分析路径（供预览验证浏览器内管线）
+    if (import.meta.env.DEV) {
+      (window as unknown as { __analyzeUrl?: (u: string) => Promise<number | null> }).__analyzeUrl =
+        async (url: string) => {
+          const res = await fetch(url);
+          return ingest(await res.arrayBuffer(), url.split('/').pop() ?? 'upload');
+        };
+    }
 
     // —— 主循环：时钟 → 爆亮 → 信使 → 相机 → 降级 → render（BV-sh-03）——
     // B1 限帧（移动端能效）：rAF 每帧回调，但仅在达到目标帧间隔时才更新+render，
@@ -742,7 +918,13 @@ async function boot(): Promise<void> {
         rig.update(dt, recFocus, streamer?.elapsedSec ?? 0);
       } else if (cloud && playback && rig) {
         const t = playback.now();
-        if (playback.playing && t >= playback.duration) {
+        if (!scrubbing) {
+          progressBar.value = String(Math.round(t * 1000));
+          progressNow.textContent = formatPlaybackTime(t);
+          setProgressFill();
+        }
+        if (!playbackFinished && (playback.finished || (playback.playing && t >= playback.duration))) {
+          playbackFinished = true;
           playback.finish(); // 014：停在末尾保持全图点亮，再按播放从头
           cloud.settle();    // 019：终曲落定
           finaleCruisePending = shouldUseFinaleCruise(currentCameraMode) && cloud.startFinale(); // 020：自由运镜不接管为巡航
@@ -759,7 +941,6 @@ async function boot(): Promise<void> {
         const mFocus = playback.playing && cloud.hasFocus ? cloud.focus : null;
         messenger.update(mFocus, dt, mFocus ? cloud.focusColor : null);
         combo?.update(dt, camera); // 016 连击浮字动画
-        rhythmFloor?.update(t, dt, playback.playing);
         rig.update(dt, playback.playing && cloud.hasFocus ? cloud.focus : null, t);
       }
       env.update(dt); // 云雾漂移（008）

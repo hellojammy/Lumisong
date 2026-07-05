@@ -35,7 +35,29 @@ test('native playing state advances the visual playback clock', async () => {
 test('native upload playback reads native playing state and clock', () => {
   assert.match(playbackSource, /get playing\(\): boolean \{\n    return this\.useNative \? nativeIsPlaying\(\) : this\._playing;/);
   assert.match(playbackSource, /if \(this\.useNative\) \{\n      return Math\.min\(nativeNow\(\), this\.duration\);/);
+  assert.match(playbackSource, /get finished\(\): boolean \{[\s\S]*?nativeState\(\) === 'ended'/);
   assert.match(playbackSource, /this\.source\.kind === 'external' && !this\._externalStarted/);
+});
+
+test('native ended state remains finished even if native clock reports zero', async () => {
+  globalThis.window = {
+    webkit: {
+      messageHandlers: {
+        audioBridge: { postMessage: () => {} },
+      },
+    },
+  };
+
+  const nativeAudio = await import('../src/audioNative.ts');
+
+  nativeAudio.resetNativeAudio();
+  nativeAudio.installNativeAudioCallbacks(() => {});
+  globalThis.window.__onAudioState('ended', 0);
+
+  assert.equal(nativeAudio.nativeIsPlaying(), false);
+  assert.equal(nativeAudio.nativeNow(), 0);
+  assert.equal(nativeAudio.nativeState(), 'ended');
+  assert.match(playbackSource, /get finished\(\): boolean \{[\s\S]*?nativeState\(\) === 'ended'/);
 });
 
 test('native upload playback restarts from zero after analysis completes', () => {

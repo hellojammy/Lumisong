@@ -3,7 +3,7 @@
 // 回退模式（非原生壳 / 暂未原生化的 buffer 源）仍走 WebAudio，保持桌面与过渡可用。
 import {
   hasNativeAudio, nativePlayDefault, nativePlay, nativePause, nativeSeek,
-  nativeNow, nativeIsPlaying, nativeBusy, setLocalPaused, isRecordingReady,
+  nativeNow, nativeIsPlaying, nativeBusy, nativeState, setLocalPaused, isRecordingReady,
 } from './audioNative';
 
 /** 播放源：
@@ -21,6 +21,7 @@ export class Playback {
   private startCtxTime = 0;
   private startOffset = 0;
   private _playing = false;
+  private _finished = false;
   /** external 源：首次接管时把原生播放头拉回 0，避免分析耗时造成声画错位 */
   private _externalStarted = false;
 
@@ -49,6 +50,12 @@ export class Playback {
     return this.buffer.duration;
   }
 
+  get finished(): boolean {
+    if (this._finished) return true;
+    if (this.useNative) return nativeState() === 'ended';
+    return !this._playing && this.startOffset >= this.duration - 0.01;
+  }
+
   /** 当前播放进度（秒）——原生模式走锚点外推，回退模式走 ctx 权威时钟 */
   now(): number {
     if (this.useNative) {
@@ -63,7 +70,8 @@ export class Playback {
   async play(): Promise<boolean> {
     if (this.useNative) {
       if (nativeBusy()) return false;
-      if (this.startOffset >= this.duration - 0.01) this.startOffset = 0;
+      if (this.finished || this.startOffset >= this.duration - 0.01) this.startOffset = 0;
+      this._finished = false;
       if (this.source.kind === 'bundle' && this.startOffset <= 0.01) {
         // 默认音频：原生从 Bundle 直读开播
         nativePlayDefault(this.source.file);
@@ -84,7 +92,8 @@ export class Playback {
       return true;
     }
     if (this._playing) return true;
-    if (this.startOffset >= this.duration - 0.01) this.startOffset = 0; // 014：停在末尾时重播从头
+    if (this.finished || this.startOffset >= this.duration - 0.01) this.startOffset = 0; // 014：停在末尾时重播从头
+    this._finished = false;
     if (this.ctx.state === 'suspended') {
       await this.ctx.resume();
     }
@@ -116,6 +125,7 @@ export class Playback {
    * 全图保持点亮状态供观察（014）；再次 play() 自动从头开始。
    */
   finish(): void {
+    this._finished = true;
     if (this.useNative) {
       this.startOffset = this.duration;
       setLocalPaused(this.duration);
@@ -125,12 +135,17 @@ export class Playback {
     this.startOffset = this.duration;
   }
 
-  /** 跳转到指定秒（保留接口，当前主流程未用） */
+  /** 跳转到指定秒；播放中会自动从新位置续播 */
   seek(pos: number): void {
     this.startOffset = Math.max(0, Math.min(pos, this.duration));
+    this._finished = this.startOffset >= this.duration - 0.01;
     if (this.useNative) {
       nativeSeek(this.startOffset);
+      return;
     }
+    const wasPlaying = this._playing;
+    this.stopSource();
+    if (wasPlaying && !this._finished) void this.play();
   }
 
   private stopSource(): void {

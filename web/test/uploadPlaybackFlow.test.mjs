@@ -24,9 +24,8 @@ test('uploaded audio is classified before formal analysis and user profile choic
   assert.doesNotMatch(mainSource, /await analyzeAudio\(\s*bytes,\s*ctx,\s*name/s);
 });
 
-test('uploaded playback uses one frame clock for notes terrain and camera', () => {
+test('uploaded playback uses one frame clock for notes and camera', () => {
   assert.match(mainSource, /const t = playback\.now\(\);/);
   assert.match(mainSource, /if \(playback\.playing\) cloud\.updateFlare\(t\)/);
-  assert.match(mainSource, /rhythmFloor\?\.update\(t, dt, playback\.playing\)/);
   assert.match(mainSource, /rig\.update\(dt, playback\.playing && cloud\.hasFocus \? cloud\.focus : null, t\)/);
 });

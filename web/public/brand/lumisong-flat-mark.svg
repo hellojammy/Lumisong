@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Lumisong flat mark</title>
+  <desc id="desc">Single-color simplified Lumisong mark for constrained use.</desc>
+  <rect width="512" height="512" rx="112" fill="#05070d"/>
+  <g fill="none" stroke="#67e8f9" stroke-linecap="round" stroke-linejoin="round">
+    <g opacity="0.28" stroke-width="1.4">
+      <path d="M74 418H438"/>
+      <path d="M104 384H408"/>
+      <path d="M134 356H378"/>
+      <path d="M164 332H348"/>
+      <path d="M86 426L196 314"/>
+      <path d="M256 462L256 302"/>
+      <path d="M426 426L318 314"/>
+    </g>
+    <path d="M121 246C153 225 174 193 211 202C248 211 247 161 286 151C323 142 333 190 385 175" stroke-width="8"/>
+  </g>
+  <g fill="#67e8f9">
+    <circle cx="121" cy="246" r="18"/>
+    <circle cx="211" cy="202" r="22"/>
+    <circle cx="286" cy="151" r="17"/>
+    <circle cx="337" cy="190" r="15"/>
+    <circle cx="385" cy="175" r="20"/>
+  </g>
+  <g fill="#67e8f9" opacity="0.36">
+    <circle cx="143" cy="222" r="4"/>
+    <circle cx="178" cy="178" r="3"/>
+    <circle cx="232" cy="148" r="3"/>
+    <circle cx="318" cy="244" r="4"/>
+    <circle cx="374" cy="264" r="3"/>
+    <circle cx="253" cy="288" r="4"/>
+  </g>
+</svg>

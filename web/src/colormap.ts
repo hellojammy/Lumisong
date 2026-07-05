@@ -20,7 +20,7 @@ export const PALETTES: Palette[] = [
   },
   {
     key: 'magma',
-    label: '熔金',
+    label: '融金',
     // magma 科学色谱：紫 → 绯红 → 橙 → 淡金，暗底华丽
     stops: [
       [0.0, '#3B0F70'], [0.25, '#8C2981'], [0.5, '#DE4968'],

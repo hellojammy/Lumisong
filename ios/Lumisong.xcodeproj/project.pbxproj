@@ -13,6 +13,7 @@
 		A1000014 /* AppSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000004 /* AppSchemeHandler.swift */; };
 		A1000015 /* WebContent in Resources */ = {isa = PBXBuildFile; fileRef = A1000005 /* WebContent */; };
 		A1000016 /* AudioBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000007 /* AudioBridge.swift */; };
+		A1000017 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000008 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		A1000007 /* AudioBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioBridge.swift; sourceTree = "<group>"; };
 		A1000005 /* WebContent */ = {isa = PBXFileReference; lastKnownFileType = folder; path = WebContent; sourceTree = "<group>"; };
 		A1000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +55,7 @@
 				A1000003 /* WebViewContainer.swift */,
 				A1000004 /* AppSchemeHandler.swift */,
 				A1000007 /* AudioBridge.swift */,
+				A1000008 /* Assets.xcassets */,
 				A1000005 /* WebContent */,
 				A1000006 /* Info.plist */,
 			);
@@ -76,6 +79,7 @@
 			buildPhases = (
 				A1000041 /* Sources */,
 				A1000020 /* Frameworks */,
+				A1000044 /* Sync WebContent */,
 				A1000042 /* Resources */,
 			);
 			buildRules = (
@@ -126,10 +130,33 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1000015 /* WebContent in Resources */,
+				A1000017 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A1000044 /* Sync WebContent */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Sync WebContent";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd \"$SRCROOT/../web\"\nnpm run build\n\"$SRCROOT/sync-web.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A1000041 /* Sources */ = {
@@ -196,6 +223,7 @@
 		A1000062 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -219,6 +247,7 @@
 		A1000063 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
