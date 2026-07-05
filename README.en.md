@@ -26,14 +26,10 @@ It is not merely a player and not a birdsong-only analyzer. More precisely, Lumi
 ## Preview
 
 <p align="center">
-  <a href="docs/assets/lumisong-preview.mp4">
-    <img src="docs/assets/lumisong-lianyi.png" alt="Lumisong demo — click to watch preview video" width="100%">
-  </a>
+  <img src="docs/assets/lumisong-lianyi.png" alt="Lumisong demo" width="100%">
 </p>
 
-<p align="center">
-  <a href="docs/assets/lumisong-preview.mp4"><strong>▶ Watch demo video (MP4)</strong></a>
-</p>
+https://github.com/user-attachments/assets/bc84fc56-34c7-4f7a-b8c7-04514658aecf
 
 ## Features
 
