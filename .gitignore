@@ -17,6 +17,7 @@
 *.ogg
 *.opus
 *.mp4
+!web/public/data/birdsong_44k.wav
 !docs/assets/
 !docs/assets/*.mp4
 

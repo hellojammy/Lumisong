@@ -236,10 +236,23 @@ async function boot(): Promise<void> {
     setPalette(storedSetting('palette')); // 006：配色持久化，默认融金
     const data = await loadData('/data/syllables.json');
     const audioRes = await fetch(`/data/${data.meta.audioFile}`);
-    if (!audioRes.ok) throw new Error(`音频加载失败：HTTP ${audioRes.status}`);
+    if (!audioRes.ok) {
+      throw new Error(
+        `默认音频缺失：/data/${data.meta.audioFile}（HTTP ${audioRes.status}）。` +
+          '请确认 web/public/data/ 中有该文件；从 GitHub 克隆后需拉取最新代码。',
+      );
+    }
     const audioBytes = await audioRes.arrayBuffer();
     ctx = new AudioContext();
-    const buffer = await ctx.decodeAudioData(audioBytes);
+    let buffer: AudioBuffer;
+    try {
+      buffer = await ctx.decodeAudioData(audioBytes);
+    } catch {
+      throw new Error(
+        `无法解码默认音频 /data/${data.meta.audioFile}。` +
+          '文件可能损坏或未随仓库提交；请 git pull 最新版，或上传自己的音频。',
+      );
+    }
 
     // 原生音频回调（A1）：接收原生播放进度锚点 / 结束状态；播完由主循环 now()>=duration 兜底
     installNativeAudioCallbacks(() => {});

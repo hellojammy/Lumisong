@@ -5,6 +5,13 @@ import fs from 'node:fs';
 const mainSource = fs.readFileSync(new URL('../src/main.ts', import.meta.url), 'utf8');
 const iosProject = fs.readFileSync(new URL('../../ios/Lumisong.xcodeproj/project.pbxproj', import.meta.url), 'utf8');
 
+test('default demo audio is tracked for fresh clones', () => {
+  const gitignore = fs.readFileSync(new URL('../../.gitignore', import.meta.url), 'utf8');
+  assert.match(gitignore, /!web\/public\/data\/birdsong_44k\.wav/);
+  const wavPath = new URL('../public/data/birdsong_44k.wav', import.meta.url);
+  assert.ok(fs.existsSync(wavPath), 'missing web/public/data/birdsong_44k.wav');
+});
+
 test('production build does not expose browser-only analysis test hook', () => {
   assert.match(mainSource, /if \(import\.meta\.env\.DEV\) \{[\s\S]*?__analyzeUrl/);
 });
